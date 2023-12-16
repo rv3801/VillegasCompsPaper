@@ -1,0 +1,331 @@
+\documentclass[10pt,twocolumn]{article}
+
+% use the oxycomps style file
+\usepackage{oxycomps}
+
+% usage: \fixme[comments describing issue]{text to be fixed}
+% define \fixme as not doing anything special
+\newcommand{\fixme}[2][]{#2}
+% overwrite it so it shows up as red
+\renewcommand{\fixme}[2][]{\textcolor{red}{#2}}
+% overwrite it again so related text shows as footnotes
+%\renewcommand{\fixme}[2][]{\textcolor{red}{#2\footnote{#1}}}
+
+% read references.bib for the bibtex data
+\bibliography{references}
+
+% include metadata in the generated pdf file
+\pdfinfo{
+    /Title (League of Legends Pro-Based Companion App)
+    /Author (Roberto Villegas Jr.)
+}
+
+% set the title and author information
+\title{League of Legends Pro-Based Companion App}
+\author{Roberto Villegas Jr.}
+\affiliation{Occidental College}
+\email{rvillegas@oxy.edu}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+League of Legends is one of the most popular games in the world, with millions of active players everyday.
+It is a 5v5 battle arena game in which teams fight each other to destroy the other team's base in order to claim victory.
+The game, in addition to being a relatively open map for players to move in, also allows players to buy items, boosts their own stats with "runes", and capture different objectives to gain an advantage over the other team.
+Because of this, you can never expect two games to end up the same way, adding to the fun of playing the game.
+
+League of Legends also boasts one of the most popular esports scenes on the internet, with this year's world final peaking at 6.4 million viewers (not including Chinese viewership, which is certainly in the millions range).
+Franchised leagues are operated all around the world, from Los Angeles to Berlin to Shanghai.
+Some players have even made themselves a household name, like the 4-time world champion Faker in South Korea.
+
+\section{Problem Context}
+As popular League of Legends and League of Legends esports may be, the game itself is known to be difficult to master.
+There are currently 166 champions in the game for players to choose from, each with a different set of abilities to use.
+There are also over 250 items available in the game, as well as thousands of possible combinations for runes.
+The game forces you to make decisions at every step of the way, beginning even before you enter the battle arena itself.
+For new or casual players, these decisions can be overwhelming and can impact how well they learn and play the game.
+It even has an impact on how a player enjoys a game (who would enjoy a game they consistently struggle at?).
+
+All of this combined make for a rather negative gaming experience if you are not a player that has been playing for multiple years or a player with friends to show you how to play.
+And assuming that the average player will only play a few hours for a couple days a week, there are little to no ways for a player to actually improve gameplay and game experience outside of constantly playing the game and learning decision-making strategy from other players in game.
+So what can a player do to improve their decision making and thus improve gameplay and game enjoyment?
+
+\section{Proposed Solution}
+My app aims to solve this problem by collecting public game data from games played by LoL esports pro players and providing suggestions to users based on this data.
+It will suggest rune combinations and possible item purchases to the user based on the champion they choose and the champions they are playing against.
+Pro player data will be constantly updated with the latest game data, ensuring that users will have the most up-to-date builds to choose from.
+
+\section{Technical Overview}
+There are three main things being used for this app: the Riot Games API, a MySQL database, and the League Client API.
+
+The Riot Games API is where all of the game data will come from.
+As long as I have a list of known pro player accounts, the app will be able to access data for any match a player may have participated in.
+For this project, the most important data to collect from this API is which runes they have used, which items they have bought, what champions they have played against, and the end-game stats (total damage, total gold earned, etc.).'
+
+This data will be stored in a MySQL database divided into different tables based on data type. The "Teams", "Players", and "Accounts" tables contain general data about the players and the accounts they own. 
+The "Teams" table is specifically used in case a user wants to use runes from players that are part of a specific team or region.
+The next set of tables are the main tables used for the app. These tables are "Matches", "MatchPicks", "MatchRunes", and "MatchItems".
+The "Matches" table contains the general data of the match, including the match ID and the match timeline (more on what this is used for later).
+This table is also used as a reference for the other "match" tables as a foreign key to use as a primary key.
+The "MatchPicks" table stores data on what champions are picked in each match in the "Matches" table.
+This also includes non-pro picks, since some suggestions will be made based on what champions pro players are playing against.
+"MatchRunes" and "MatchItems" contain a list of runes and items used by the pro player in a match.
+"MatchItems" also contains the order in which an item is purchased, since this is important for how a build works in LoL.
+
+To get the data from the database to the game client itself, the app makes use of the League Client API.
+This is a locally hosted API by the game client with endpoints accessible by a WebSocket.
+The two-way connection provided by the WebSocket allows the app to maintain a constant connection to the client and listen for any updates, mainly updates for when a player connects to a game.
+It also allows the app to create objects in the client, which will be used for adding runes pages and item sets with the suggestions.
+
+\section{Existing Apps}
+There are a few existing apps that work quite similarly to this one.
+For starters, they all collect data using the Riot Games API to collect game data.
+Most apps, for example mobalytics.gg and porofessor.gg, will offer different build based on what is being played the most (similar to this app).
+They can take a look at what is going on in champ select and make suggestions based on what may be the best decision to make.
+Even during the game, stats can be tracked to give the user an idea of where they should be in comparison to players of a similar rank.
+
+Other apps, like op.gg and u.gg, even provide opportunities to track the pros, similar to how this app has a pro focus.
+Users can use their apps or visit their website to see a list of pros that are currently playing to spectate their games, or to take a look at their match history and see what they've been up to in terms of builds and champion picks.
+
+The key difference between these apps and my app is the fact that this app is specifically focused on collecting pro player data and making suggestions based on that.
+The other apps will collect data from the entire playerbase and make suggestions based on what other players are finding success with.
+
+Issues can arise from this because not every player's data can be considered reliable.
+One type of player that is common to find in League of Legends is one that plays the same champion all the time, usually called a One Trick Pony (OTP).
+OTPs can be notorious because these players will know every detail about the champion they play, even beyond the descriptions the game may provide.
+These players will also have a unique set of builds that they may use to suit their own unique playstyle.
+All of this data will be included in the general player data that these apps use for suggestions, which would give a false representation of what actually is a good build.
+
+
+\section{Foundational Assumption}
+An important aspect of this app to note is that there is a foundational assumption that everything relies on to justify the idea behind this app.
+This assumption is that pro players make the best decisions in the game out of anyone else in the player base.
+
+The logic behind this assumption considers the time and dedication pro players have to playing the game.
+Players that go pro in League of Legends are typically the only players that will spend most of their day playing and thinking about the game.
+It's their job; they are pretty much required to keep up with the latest trends in the game if they want to stay on top of.
+Whenever they are not with the rest of their team for team meetings, practices, or scrimmages with other pro teams, these players spend their time playing in the solo competitive game queue to refine their gameplay.
+Because of this, it is safe to assume that anything they do when playing the solo game mode is the "correct" decision to make in whatever situation they're in.
+This includes runes selected and items purchased.
+
+This assumption has its fair share of flaws though.
+A question I was asked in regards to this assumption considered how much of an effect a pro player's own mechanics have on the success of a certain build.
+In other words, how do we know a certain build is actually a good build and not just a result of the player's high skill level?
+Will the pro player's success with a build translate to a user's success when they use the same build?
+This is similar to the issue I raised regarding OTPs for other similar apps.
+In the scope of pro players, these flaws are hard to answer because there is virtually no way to determine whether there is an effect or not.
+There is no way to track the keyboard and mouse movement a pro player has and compare it to a user.
+It is hard to say if a user has good game mechanics or not because there is not a reference to compare them to alongside the game data.
+I am also not in the room with the pro players when they are playing the game, so the "why?" behind all of their decisions is lost.
+There is currently no way for the app to differentiate between a "good" build and a "good" player, so it is hard to fully remove this flaw that may affect data.
+At the very least, pros will at worst play champions that they are most comfortable with playing, probably because of experience playing the champion or general familiarity.
+Thus, I believe this flaw can be mostly overlooked since the pros are less prone to use bad builds like OTPs may use for specific cases.
+
+
+\section{Methods}
+My approach to the app focuses on layering the different functions of the app on top of each other based on importance.
+At the very top is the connection to the League Game Client.
+All input to the app originates from the client, so connection to the client will remain at the highest level of the app.
+Everything goes through the client control.
+
+Next is the part of the app that controls what happens during the champ select phase of the game.
+Before every game, players have a chance to choose their champion to play, as well as edit their runes page to adjust their champion stats and passive abilities.
+This is the main part of the app where suggestions are produced and given to the user.
+Input from the client is passed through this champ select control section, passed to the database for relevant data, and uses the resulting data to pass a suggestion back to the client for direct implementation.
+
+Last is the database control section of the app.
+This is the only part of the app that has direct access to the database in order to regulate the data that comes out of the database, as well as make it easier to send queries with different parameters and requirements.
+Whenever the champ select control section needs data, a function from the database control is called, which sends the query with the correct parameters and returns the result.
+The result that it sends can change depending on what is needed in the champ select control section(more on this below).
+
+\subsection{League of Legends Game Client}
+The entire app relies on its connection to the game client.
+As such, establishing a WebSocket connection between the app and the game client is the first step when starting the app.
+
+When the app and the game client are both running, the app establishes a WebSocket connection and a "GET" request is made for the current user's account information.
+Some request require information like the user's "summoner ID" ("summoner" is the game's way to call players) when requesting information, even though there is only one account logged in to the client at any time.
+
+After this is done, another connection is established with the champ select endpoint in the client.
+This is the only endpoint that has a constant connection since any phase of champ select will indicate when a lobby has been joined or a game has started.
+When an update is sent to this endpoint, the update is read to check what exactly is going on within the client.
+If the champ select phase has started, a call to the champ select control section is made and the suggestion process starts. 
+
+\subsection{Champ Select}
+Depending on which phase champ select is currently at, a different function may be called.
+For example, if champ select just started and there are not any picks yet from either team, the all the app can do is suggest a champion to pick based on nothing but popularity and success.
+When an enemy pick is finally made, then more specific suggestions can be made to possibly counter what the enemy team has already picked.
+This will continue until the user makes a pick of their own, which will shift the focus of suggestions from champions to runes.
+
+The app will still have to consider what the other team has already picked, since runes can change depending on who a player is playing against.
+Three different suggestions will be made: the most popular runes build for that champion (regardless of success or enemy picks), the most successful in terms of individual performance (regardless of enemy picks), and the most successful versus the likeliest lane opponent.
+It is impossible to know for sure which champion in the other team will be your lane opponent because the client hides the position of the other team.
+Certain champs can even be played in different positions, so the app will have to take a look at the enemy team and decide who might be the user's lane opponent.
+
+Once all picks have been made for both teams, final suggestions will be sent to the client for the user to choose from before the game starts.
+The user will have full control of what build they want to use in case they have a specific playstyle they want to use for that game.
+If the player does not have the game knowledge to know what they want or don't want, there is always the "most popular" build for them to choose from.
+
+\subsection{Database}
+In order for the champ select control section to make suggestions, it needs access to the data in the database.
+This database control section takes input from the champ select control section and makes queries to the database based on which function is called and what parameters are added to the call.
+
+The database is organized in a way to make the results of queries easier to process by the champ select control section.
+To start, the runes chosen by a pro player in a game are stored in one row.
+This is because runes are typically done in groups (primary runes set, secondary runes set, and "stat" runes set) so storing runes individually would not produce correct results.
+When stored in one entry like this, an accurate representation of the most popular/successful runes can be generated and sent to the champ select control page.
+
+Items on the other hand are stored as individual entries in the items table.
+This is because items can be bought without consideration for any other items that are purchased.
+When a list of items needs to be generated, one query can be sent to find out which item is the most purchased item for a champ in a specific position.
+Then, another query can be made to see the next most popular item purchased, but this time it must be an item bought with the first item.
+Rows for items are stored with match and player information, so it is no issue figuring out which items are bought with which items.
+
+Lastly, the table of champion picks themselves are stored in their own table.
+This contains not only pro player picks but also non-pro ally and enemy picks.
+This is because it is important to know who a pro player has played against when they decided to use a certain item or rune build.
+This is also what is used for builds specific to success versus another champion.
+
+A few different ways of organizing the database were considered when figuring out what would be most efficient.
+In the initial design, an entire build for a champion was included in one row per pick.
+This included the champion picked, the runes they used, and even the items they bought that game.
+This was a problem though, because there was no way to tell who that player played against.
+
+When champion picks were separated from the rest of the build, another issue was encountered with the items.
+Originally, only 6 columns were reserved to store what items a player purchased in a game.
+This on its own wasn't too much of an issue until I realized there had to be something that separated items by type.
+In the game, there are different types of items that can be built at different points in the game.
+"Starter" items, for example, are available for a player to buy at the beginning of the game to have basic stats and abilities enhanced until they can buy real items later in the game.
+"Mythic" and "Legendary" items are the highest tier of items you could get, which all have special effects in addition to the stats and abilities they provide. 
+Between "starter" and "mythic"/"legendary" items are "basic" and "epic" items, which are used as components to build the higher tier items. 
+Multiple high tier items can use the same "basic" and "epic" items as components, which caused problems for generating item lists when they were in the same row.
+At first, popular item builds were missing because having a lower tier item would make the app not recognize the build as the intended build.
+These lower tier items would also make their way to the items list sent for suggestions, which didn't make sense because there is no indication as to what item it should be built into.
+As a result, I separated items into their own table with each item having their own row.
+In this way, the item tier can be stored as its own column, making queries easier and more direct.
+The item build order is also possible since this can be another column as well.
+The result of these changes are three different tables for picks, runes, and items for easy query. 
+
+This database control section will always have access to the database during the entire champ select phase, so any and every update made in the champ select control section of the app will be able to request new data for new suggestions until it is time to start the game.
+
+\section{Evaluation}
+To evaluate the effectiveness of the app, an analysis of the user's gameplay stats will be required.
+
+\subsection{Evaluation Metrics}
+To start, it must be noted that a player's winrate will not be an effective way of determining whether the app works as intended or not.
+While a high winrate over a long streak of games can be an indicator of positive individual performance in general, it will not be of great use for evaluating this project.
+Since League of Legends is a team game, a player's teammates will have a significant impact on the outcome of a match.
+For example, you could have an exceptional game with very positive stats (high damage output, an excellent kill/death/assist ratio, etc), but if the rest of your team is underperforming significantly and giving the enemy team an opportunity to come back and win the game, there is not much you can do to win.
+Thus, winrate will not be a good indicator of individual performance in a game.
+
+Instead, an analysis of the individual stats themselves will be used as the primary evaluation metric.
+Specifically, stats from the section of the game known as the "laning phase" will be looked at for improvement of performance by users.
+The laning phase, which is defined as the first 14 minutes of the game, is the most influential phase of the game.
+Players will stay within their designated lanes/areas assigned by their position and fight the opposing players in the same position for control of their lane/area.
+Built-in incentives are also available in the game, which rewards players that gain control over their lane and damage the enemy's defending turrets, which have "turret plates" that can be destroyed for gold (gold means more items, and items mean better stats).
+Being able to perform well and gain advantages within this first phase will set you up for the following "mid game" phase and allow you to snowball those advantages to a win.
+
+\subsection{Evaluation Method}
+To properly evaluate the app, I will have different users play the game both with and without help from the app.
+These players will be both new players and casual players, reflecting the intended type of user for the app.
+Since the users have different levels of familiarity and experience with the game, I will have to compare the user's stats without the app with the user's stats with the app.
+Trying to compare these stats across users would not give an accurate representation of the effect of the app, since the players all have different starting and ending points in terms of the stats that they will achieve.
+
+All users will also be asked to play the same, newly released champion.
+This is to avoid having a user play a champion that they already have experience and potentially mess up the data.
+Fortunately, a new champion called "Hwei" was released within the last earlier this month (December 2023).
+All users will not have much experience on the champion (or possibly any experience at all) so we know any significant improvement will be due to the app.
+
+Additionally, to maintain the same environment for all users being tested, a custom game with the same opponent champions will be chosen for every game.
+Users will rotate from the tested role into the other controlled roles so that the data will be reliably collected without any external influence from different players and champions.
+
+\subsection{Final Evaluation}
+A successful evaluation would mean seeing significant improvement from the games played without the app to the game played with the app.
+Some improvement would be expected from the first game to the last game played without the app because of increased familiarity with the champion as time goes on.
+If there is significant improvement between the last non-app game and the rest of the game with the app, then you can say for sure that the app has succeeded in its goal.
+
+\section{Results}
+
+\subsection{Analysis of Results}
+
+\section{Ethical Consideration}
+It is difficult to accurately recognize the possible biases and contributions to inequality that the app may have because of the fact that it is a companion app to a video game.
+Thus, to start, any ethical issue tied to League of Legends will be tied to the app even if it does not have a direct connection to that issue.
+
+The first possible consideration for the app could be its physical accessibility.
+Can users with physical disabilities use the app to its full capabilities?
+In short, yes.
+But it is contingent on if the user is able to play League of Legends in the first place.
+The game does not use the same general controls(buttons to move in four directions, buttons for different actions, etc.) that most games use.
+For example, movement in League of Legends is based on where you right click in the map.
+Wherever you click, you move to that position.
+But you can also left click an object or enemy to start attacking them.
+Your cursor position is also used to aim abilities, which are casted by pressing keys.
+Even moving the in-game camera is controlled by your mouse movement unless you have the locked camera setting enabled.
+With all these issues, if a user has found a solution to play the game without any obstacles, then the app will work for them as normal.
+Fortunately, the app works by inserting the data directly into the game client itself, so any external windows or programs are not necessary.
+As long as a user has adequate access to the game, then they have adequate access to the app.
+
+There is significant consideration to be had with the competitive advantage the app may provide, though.
+Riot Games provides quite little guidelines on what is allowed for third party applications that can affect gameplay, but it is relatively straightforward \cite{RiotGamesThirdPartyApplication}.
+Their websites states that an app can't provide a "measurable player advantage."
+This includes:
+\begin{itemize}
+    \item Exposing information that’s intentionally obfuscated (cooldowns or timers)
+    \item Taking actions on your behalf (botting or scripting)
+    \item Drawing conclusions for you (predicting enemy positions)
+    \item Altering your field of intelligence (zoomhacks or global ult alerts)
+\end{itemize}
+None of these are an issue with this app.
+All the app simply does is provide information to the user for them to make decisions.
+The user can even decide to not use the provided suggestions if they didn't feel like using them.
+There is no information provided by the app that is hidden by the game client, so any unfair advantage is avoided by the app.
+
+\section{Appendices}
+
+\subsection{Replication}
+First, the correct version of Python needs to be installed.
+The version used for this project was 3.10.5.
+
+A MySQL instance is the next item needed to be installed for the app.
+The version of MySQL used to make this app is version 8.0.34.
+
+Lastly, the dependencies used by the app are listed in the requirements.txt file.
+Anyone wishing to replicate the app can run "pip install -r requirements.txt" which will pip install everything needed to run the app.
+
+After everything has installed, it is time to fill the database.
+The first script to run is update\_accounts.
+This will fill the Accounts table with the necessary data for the rest of the tables to be filled.
+
+Before running the following scripts, you must first secure a RiotAPI key and add the .txt file path containing the key.
+This will allow you to access the API that will provide all of the match data to put into the database.
+
+The next (and last) script to be run is the update\_matches script.
+This will fill the Matches, MatchPicks, MatchRunes, MatchItems, and MatchStats tables.
+These are the main tables used to send data through the app and to the game client.
+
+Once everything has been set up for the app, you can start the app by running the lcu\_control script.
+
+\subsection{Code Architecture}
+The first component of the app's code is the lcu\_control python script.
+After connecting to the client, the only endpoint that it connects to is the champ select endpoint.
+Still, there are still a few "get" requests that the script makes to collect data, based on the phase of champ select that the game is currently in.
+For example, when there is any update to champ select, the script will make a "get" request to that champ select endpoint in order to get the phase of champ select.
+When this has been secured, the phase of champ select is checked and additional "get" requests are made.
+
+This script is the only one that has access to the client because it keeps the code organized without every script in the project having access to the client.
+It avoids having possibly redundant code and keeps the source of champ select data in one place.
+No unnecessary calls are made to the client.
+
+The db\_control script is the only one with access to the database for the same reason.
+There are no unnecessary connections to the database for extra queries.
+
+The script connecting client data to database data is the champ\_select\_control script.
+It takes in client data based on the function called by lcu\_control, and makes the relevant request to the database by calling a function from db\_control.
+
+
+\printbibliography
+
+\end{document}
